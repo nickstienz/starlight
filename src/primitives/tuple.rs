@@ -34,6 +34,62 @@ macro_rules! impl_sub {
 
 pub(crate) use impl_sub;
 
+// ft: from type, st: op type, rt: return type
+macro_rules! impl_mul {
+    ($ft:ty, $ot:ty, $rt:ty) => {
+        impl std::ops::Mul<$ot> for $ft {
+            type Output = $rt;
+            fn mul(self, rhs: $ot) -> $rt {
+                <$rt>::new(self.x() * rhs.x(), self.y() * rhs.y(), self.z() * rhs.z())
+            }
+        }
+    };
+}
+
+pub(crate) use impl_mul;
+
+// ft: from type, st: op type, rt: return type
+macro_rules! impl_div {
+    ($ft:ty, $ot:ty, $rt:ty) => {
+        impl std::ops::Div<$ot> for $ft {
+            type Output = $rt;
+            fn div(self, rhs: $ot) -> $rt {
+                <$rt>::new(self.x() / rhs.x(), self.y() / rhs.y(), self.z() / rhs.z())
+            }
+        }
+    };
+}
+
+pub(crate) use impl_div;
+
+// ft: from type, st: op type, rt: return type
+macro_rules! impl_mul_scalar {
+    ($ft:ty, $ot:ty, $rt:ty) => {
+        impl std::ops::Mul<$ot> for $ft {
+            type Output = $rt;
+            fn mul(self, rhs: $ot) -> $rt {
+                <$rt>::new(self.x() * rhs, self.y() * rhs, self.z() * rhs)
+            }
+        }
+    };
+}
+
+pub(crate) use impl_mul_scalar;
+
+// ft: from type, st: op type, rt: return type
+macro_rules! impl_div_scalar {
+    ($ft:ty, $ot:ty, $rt:ty) => {
+        impl std::ops::Div<$ot> for $ft {
+            type Output = $rt;
+            fn div(self, rhs: $ot) -> $rt {
+                <$rt>::new(self.x() / rhs, self.y() / rhs, self.z() / rhs)
+            }
+        }
+    };
+}
+
+pub(crate) use impl_div_scalar;
+
 // ft: from type, rt: return type
 macro_rules! impl_neg {
     ($ft:ty, $rt:ty) => {

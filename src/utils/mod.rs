@@ -1,1 +1,1 @@
-pub mod equals;
+pub mod eq;

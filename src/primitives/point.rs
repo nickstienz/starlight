@@ -1,6 +1,7 @@
 use crate::primitives::tuple::*;
 use crate::primitives::vector::Vector;
 
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Point {
     x: f64,
     y: f64,
@@ -31,6 +32,7 @@ impl Tuple for Point {
 
 impl_sub!(Point, Point, Vector);
 impl_sub!(Point, Vector, Point);
+impl_add!(Point, Vector, Point);
 
 #[cfg(test)]
 mod tests {
