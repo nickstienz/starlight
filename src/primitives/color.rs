@@ -38,10 +38,10 @@ impl Color {
     }
 }
 
-impl_add!(Color, Color, Color);
-impl_sub!(Color, Color, Color);
-impl_mul_scalar!(Color, f64, Color);
-impl_mul!(Color, Color, Color);
+tuple_impl_add!(Color, Color, Color);
+tuple_impl_sub!(Color, Color, Color);
+tuple_impl_mul_scalar!(Color, f64, Color);
+tuple_impl_mul!(Color, Color, Color);
 
 #[cfg(test)]
 mod tests {

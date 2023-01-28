@@ -1,13 +1,43 @@
 pub trait Tuple {
     fn new(x: f64, y: f64, z: f64) -> Self;
+    fn zero() -> Self
+    where
+        Self: Sized,
+    {
+        let mut new = Self::new(0.0, 0.0, 0.0);
+        new.set_w(0.0);
+        new
+    }
     fn x(&self) -> f64;
     fn y(&self) -> f64;
     fn z(&self) -> f64;
     fn w(&self) -> f64;
+    fn set_x(&mut self, x: f64);
+    fn set_y(&mut self, y: f64);
+    fn set_z(&mut self, z: f64);
+    fn set_w(&mut self, w: f64);
+    fn get_at(&self, index: usize) -> f64 {
+        match index {
+            0 => self.x(),
+            1 => self.y(),
+            2 => self.z(),
+            3 => self.w(),
+            _ => panic!("Index out of bounds"),
+        }
+    }
+    fn set_at(&mut self, index: usize, value: f64) {
+        match index {
+            0 => self.set_x(value),
+            1 => self.set_y(value),
+            2 => self.set_z(value),
+            3 => self.set_w(value),
+            _ => panic!("Index out of bounds"),
+        }
+    }
 }
 
 // ft: from type, st: op type, rt: return type
-macro_rules! impl_add {
+macro_rules! tuple_impl_add {
     ($ft:ty, $ot:ty, $rt:ty) => {
         impl std::ops::Add<$ot> for $ft {
             type Output = $rt;
@@ -18,10 +48,10 @@ macro_rules! impl_add {
     };
 }
 
-pub(crate) use impl_add;
+pub(crate) use tuple_impl_add;
 
 // ft: from type, st: op type, rt: return type
-macro_rules! impl_sub {
+macro_rules! tuple_impl_sub {
     ($ft:ty, $ot:ty, $rt:ty) => {
         impl std::ops::Sub<$ot> for $ft {
             type Output = $rt;
@@ -32,10 +62,10 @@ macro_rules! impl_sub {
     };
 }
 
-pub(crate) use impl_sub;
+pub(crate) use tuple_impl_sub;
 
 // ft: from type, st: op type, rt: return type
-macro_rules! impl_mul {
+macro_rules! tuple_impl_mul {
     ($ft:ty, $ot:ty, $rt:ty) => {
         impl std::ops::Mul<$ot> for $ft {
             type Output = $rt;
@@ -46,10 +76,10 @@ macro_rules! impl_mul {
     };
 }
 
-pub(crate) use impl_mul;
+pub(crate) use tuple_impl_mul;
 
 // ft: from type, st: op type, rt: return type
-macro_rules! impl_div {
+macro_rules! tuple_impl_div {
     ($ft:ty, $ot:ty, $rt:ty) => {
         impl std::ops::Div<$ot> for $ft {
             type Output = $rt;
@@ -60,10 +90,10 @@ macro_rules! impl_div {
     };
 }
 
-pub(crate) use impl_div;
+pub(crate) use tuple_impl_div;
 
 // ft: from type, st: op type, rt: return type
-macro_rules! impl_mul_scalar {
+macro_rules! tuple_impl_mul_scalar {
     ($ft:ty, $ot:ty, $rt:ty) => {
         impl std::ops::Mul<$ot> for $ft {
             type Output = $rt;
@@ -74,10 +104,10 @@ macro_rules! impl_mul_scalar {
     };
 }
 
-pub(crate) use impl_mul_scalar;
+pub(crate) use tuple_impl_mul_scalar;
 
 // ft: from type, st: op type, rt: return type
-macro_rules! impl_div_scalar {
+macro_rules! tuple_impl_div_scalar {
     ($ft:ty, $ot:ty, $rt:ty) => {
         impl std::ops::Div<$ot> for $ft {
             type Output = $rt;
@@ -88,10 +118,10 @@ macro_rules! impl_div_scalar {
     };
 }
 
-pub(crate) use impl_div_scalar;
+pub(crate) use tuple_impl_div_scalar;
 
 // ft: from type, rt: return type
-macro_rules! impl_neg {
+macro_rules! tuple_impl_neg {
     ($ft:ty, $rt:ty) => {
         impl std::ops::Neg for $ft {
             type Output = $rt;
@@ -102,4 +132,4 @@ macro_rules! impl_neg {
     };
 }
 
-pub(crate) use impl_neg;
+pub(crate) use tuple_impl_neg;

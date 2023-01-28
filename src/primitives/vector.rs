@@ -6,6 +6,7 @@ pub struct Vector {
     x: f64,
     y: f64,
     z: f64,
+    w: f64,
 }
 
 impl Vector {
@@ -33,7 +34,7 @@ impl Vector {
 
 impl Tuple for Vector {
     fn new(x: f64, y: f64, z: f64) -> Self {
-        Vector { x, y, z }
+        Vector { x, y, z, w: 0.0 }
     }
 
     fn x(&self) -> f64 {
@@ -49,16 +50,35 @@ impl Tuple for Vector {
     }
 
     fn w(&self) -> f64 {
-        0.0
+        self.w
+    }
+
+    fn set_x(&mut self, x: f64) {
+        self.x = x;
+    }
+
+    fn set_y(&mut self, y: f64) {
+        self.y = y;
+    }
+
+    fn set_z(&mut self, z: f64) {
+        self.z = z;
+    }
+
+    fn set_w(&mut self, w: f64) {
+        if w != 0.0 {
+            eprintln!("Warning: setting w to non-zero value in Vector ({})", w);
+        }
+        self.w = w;
     }
 }
 
-impl_add!(Vector, Vector, Vector);
-impl_add!(Vector, Point, Point);
-impl_sub!(Vector, Vector, Vector);
-impl_neg!(Vector, Vector);
-impl_mul_scalar!(Vector, f64, Vector);
-impl_div_scalar!(Vector, f64, Vector);
+tuple_impl_add!(Vector, Vector, Vector);
+tuple_impl_add!(Vector, Point, Point);
+tuple_impl_sub!(Vector, Vector, Vector);
+tuple_impl_neg!(Vector, Vector);
+tuple_impl_mul_scalar!(Vector, f64, Vector);
+tuple_impl_div_scalar!(Vector, f64, Vector);
 
 #[cfg(test)]
 mod tests {

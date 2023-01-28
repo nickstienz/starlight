@@ -6,11 +6,12 @@ pub struct Point {
     x: f64,
     y: f64,
     z: f64,
+    w: f64,
 }
 
 impl Tuple for Point {
     fn new(x: f64, y: f64, z: f64) -> Self {
-        Point { x, y, z }
+        Point { x, y, z, w: 1.0 }
     }
 
     fn x(&self) -> f64 {
@@ -26,13 +27,35 @@ impl Tuple for Point {
     }
 
     fn w(&self) -> f64 {
-        1.0
+        self.w
+    }
+
+    fn set_x(&mut self, x: f64) {
+        self.x = x;
+    }
+
+    fn set_y(&mut self, y: f64) {
+        self.y = y;
+    }
+
+    fn set_z(&mut self, z: f64) {
+        self.z = z;
+    }
+
+    fn set_w(&mut self, w: f64) {
+        if w != 1.0 {
+            eprintln!(
+                "Warning: setting w to a value other than one in Point ({})",
+                w
+            );
+        }
+        self.w = w;
     }
 }
 
-impl_sub!(Point, Point, Vector);
-impl_sub!(Point, Vector, Point);
-impl_add!(Point, Vector, Point);
+tuple_impl_sub!(Point, Point, Vector);
+tuple_impl_sub!(Point, Vector, Point);
+tuple_impl_add!(Point, Vector, Point);
 
 #[cfg(test)]
 mod tests {
