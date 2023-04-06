@@ -3,8 +3,9 @@
 #![allow(unused)]
 use pixels::{Pixels, SurfaceTexture};
 use rayon::prelude::*;
+use std::time::Instant;
 use std::{
-    sync::{Arc, Mutex},
+    sync::mpsc::{channel, Sender},
     thread, time,
 };
 use winit::event::{Event, WindowEvent};
@@ -15,15 +16,21 @@ const BUCKET_SIZE: u32 = 16;
 
 fn main() {
     // Window stuff I don't understand nor care about
-    let event_loop = winit::event_loop::EventLoop::new();
-    let window = winit::window::WindowBuilder::new()
-        .with_title("Starlight Ray Tracer")
-        .with_inner_size(winit::dpi::LogicalSize::new(WIDTH as f64, HEIGHT as f64))
-        .build(&event_loop)
-        .expect("Failed to create window");
-    let texture = SurfaceTexture::new(WIDTH, HEIGHT, &window);
-    let mut pixels = Pixels::new(WIDTH, HEIGHT, texture).expect("Failed to create pixels context");
-    let pixels_mutex = Arc::new(Mutex::new(pixels));
+    let mut pixels = {
+        let event_loop = winit::event_loop::EventLoop::new();
+        let window = winit::window::WindowBuilder::new()
+            .with_title("Starlight Ray Tracer")
+            .with_inner_size(winit::dpi::PhysicalSize::new(WIDTH as f64, HEIGHT as f64))
+            .build(&event_loop)
+            .expect("Failed to create window");
+        let texture = SurfaceTexture::new(WIDTH, HEIGHT, &window);
+        Pixels::new(WIDTH, HEIGHT, texture).expect("Failed to create pixels context")
+    };
+
+    // MSCP bullshit
+    let (tx, rx) = channel();
+
+    // Worker threads
 
     // Number of times I have said "fuck" because of this: 29
     let buckets = (0..WIDTH)
@@ -49,8 +56,10 @@ fn main() {
                     .flat_map(|bpixel_x| (0..*height).map(move |bpixel_y| (bpixel_x, bpixel_y)))
                     .for_each(|(bpixel_x, bpixel_y)| {
                         // Frame and index setup
-                        let mut pixel_lock = pixels.lock().expect("Pixel failed to lock (Oh no)");
-                        let frame = pixel_lock.frame_mut();
+                        let mut pixels = render_pixels_mutex
+                            .lock()
+                            .expect("Pixel failed to lock (Oh no)");
+                        let frame = pixels.frame_mut();
                         let index =
                             (4 * ((bucket_x + bpixel_x) + WIDTH * (bucket_y + bpixel_y))) as usize;
 
@@ -76,8 +85,6 @@ fn main() {
     event_loop.run(move |event, _, control_flow| {
         control_flow.set_wait();
 
-        pixels.lock().unwrap().render().unwrap();
-
         match event {
             Event::WindowEvent {
                 event: WindowEvent::CloseRequested,
@@ -85,10 +92,12 @@ fn main() {
             } => control_flow.set_exit(),
             _ => (),
         }
+
+        let mut pixels = pixels_mutex.lock().expect("Failed to lock pixels mutex");
+        pixels.render().unwrap();
     });
 }
 
 fn ray_trace(u: f64, v: f64) -> (f64, f64, f64) {
-    //std::thread::sleep(std::time::Duration::from_millis(10));
     (u, v, 0.5)
 }
