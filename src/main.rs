@@ -9,9 +9,9 @@ use winit::{
     event::{Event, WindowEvent},
 };
 
-const WIDTH: u32 = 100;
-const HEIGHT: u32 = 100;
-const BUCKET_SIZE: u32 = 16;
+const WIDTH: u32 = 640;
+const HEIGHT: u32 = 480;
+const BUCKET_SIZE: u32 = 64;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Bucket {
@@ -40,7 +40,7 @@ impl Bucket {
             height,
             window_width,
             window_height,
-            buffer: vec![0; (width * height * 4) as usize],
+            buffer: vec![0; 4 * (width * height) as usize],
         }
     }
 
@@ -132,33 +132,30 @@ fn main() {
         }
 
         if let Some(bucket) = rx.try_recv().ok() {
-            println!("{:?}", pixels.frame().len());
-            println!("{:?}", bucket.buffer.len());
+            println!("Bucket Recieved!");
+            println!("Frame: {}", pixels.frame().len());
+            println!("Bucket: {}", bucket.buffer.len());
 
-            for x in 0..bucket.width / 4 {
-                for y in 0..bucket.height / 4 {
-                    let frame = pixels.frame_mut();
-                    let i = coords_to_index(bucket.x + x, bucket.y + y, window_width);
-                    let j = coords_to_index(x, y, window_width);
-                    frame[i] = bucket.buffer[j];
-                    frame[i + 1] = bucket.buffer[j + 1];
-                    frame[i + 2] = bucket.buffer[j + 2];
-                    frame[i + 3] = bucket.buffer[j + 3];
+            for bp_x in 0..bucket.width {
+                for bp_y in 0..bucket.height {
+                    let (abs_x, abs_y) = (bucket.x + bp_x, bucket.y + bp_y);
+                    let abs_idx = cti(abs_x, abs_y, window_width);
+                    pixels.frame_mut()[abs_idx] = bucket.buffer[cti(bp_x, bp_y, bucket.width)];
                 }
             }
 
             pixels.render().unwrap();
+            println!("Rendered!");
         }
     });
 }
 
 fn ray_trace(bucket: &Bucket) -> Bucket {
-    // println!("Ray Tracing Buceket!");
     let mut new_bucket = bucket.clone();
-    new_bucket.set_buffer(vec![255; (bucket.width * bucket.height * 4) as usize]);
+    new_bucket.set_buffer(vec![255; 4 * (bucket.width * bucket.height) as usize]);
     new_bucket
 }
 
-fn coords_to_index(x: u32, y: u32, width: u32) -> usize {
-    (x + y * width) as usize
+fn cti(x: u32, y: u32, width: u32) -> usize {
+    (y * width + x) as usize
 }
