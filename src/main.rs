@@ -9,6 +9,8 @@ use winit::{
     event::{Event, WindowEvent},
 };
 
+mod ray_tracer;
+
 const WIDTH: u32 = 640;
 const HEIGHT: u32 = 480;
 const BUCKET_SIZE: u32 = 64;
@@ -50,6 +52,7 @@ impl Bucket {
 }
 
 fn main() {
+    println!("===[[ Starlight Ray Tracer by Nicholas Stienz! ]]===");
     // Window stuff I don't understand nor care about
     let event_loop = winit::event_loop::EventLoop::new();
 
@@ -94,6 +97,8 @@ fn main() {
         })
         .collect::<Vec<_>>();
 
+    let mut num_buckets = buckets.len();
+
     // Crossbeam fun
     let (tx, rx) = bounded::<Bucket>(buckets.len());
 
@@ -106,7 +111,7 @@ fn main() {
         let rx = rx.clone();
         handles.push(thread::spawn(move || {
             while let Ok(bucket) = rx.recv() {
-                tx.send(ray_trace(&bucket))
+                tx.send(ray_trace_bucket(&bucket))
                     .expect("Oh no, something went wrong sending a bucket!");
             }
         }));
@@ -114,11 +119,11 @@ fn main() {
 
     // Send buckets to render
     buckets.into_iter().for_each(|bucket| {
-        // println!("Sending Bucket!");
         tx.send(bucket).expect("Failed to send bucket to workers!");
     });
 
-    println!("Done sending buckets!");
+    println!("Done sending buckets: {}!", num_buckets);
+    println!("Starting event loop!");
 
     event_loop.run(move |event, _, control_flow| {
         control_flow.set_wait();
@@ -132,30 +137,55 @@ fn main() {
         }
 
         if let Some(bucket) = rx.try_recv().ok() {
-            println!("Bucket Recieved!");
-            println!("Frame: {}", pixels.frame().len());
-            println!("Bucket: {}", bucket.buffer.len());
-
             for bp_x in 0..bucket.width {
                 for bp_y in 0..bucket.height {
                     let (abs_x, abs_y) = (bucket.x + bp_x, bucket.y + bp_y);
                     let abs_idx = cti(abs_x, abs_y, window_width);
                     pixels.frame_mut()[abs_idx] = bucket.buffer[cti(bp_x, bp_y, bucket.width)];
+                    pixels.frame_mut()[abs_idx + 1] =
+                        bucket.buffer[cti(bp_x, bp_y, bucket.width) + 1];
+                    pixels.frame_mut()[abs_idx + 2] =
+                        bucket.buffer[cti(bp_x, bp_y, bucket.width) + 2];
+                    pixels.frame_mut()[abs_idx + 3] =
+                        bucket.buffer[cti(bp_x, bp_y, bucket.width) + 3];
                 }
             }
-
-            pixels.render().unwrap();
-            println!("Rendered!");
+            pixels
+                .render()
+                .expect("Failed to render pixels... this can't be good.");
+            num_buckets -= 1;
+            print!("\r{} buckets left!", num_buckets);
+            if num_buckets == 0 {
+                println!("\nDone rendering!");
+            }
         }
     });
 }
 
-fn ray_trace(bucket: &Bucket) -> Bucket {
+fn ray_trace_bucket(bucket: &Bucket) -> Bucket {
+    let mut buffer = vec![0; 4 * (bucket.width * bucket.height) as usize];
+    for x in 0..bucket.width {
+        for y in 0..bucket.height {
+            let abs_x = bucket.x + x;
+            let abs_y = bucket.y + y;
+            let color = ray_tracer::ray_trace_pixel(
+                abs_x,
+                abs_y,
+                bucket.window_width,
+                bucket.window_height,
+            );
+            let idx = cti(x, y, bucket.width);
+            buffer[idx] = color[0];
+            buffer[idx + 1] = color[1];
+            buffer[idx + 2] = color[2];
+            buffer[idx + 3] = color[3];
+        }
+    }
     let mut new_bucket = bucket.clone();
-    new_bucket.set_buffer(vec![255; 4 * (bucket.width * bucket.height) as usize]);
+    new_bucket.set_buffer(buffer);
     new_bucket
 }
 
 fn cti(x: u32, y: u32, width: u32) -> usize {
-    (y * width + x) as usize
+    (4 * (y * width + x)) as usize
 }
