@@ -1,55 +1,19 @@
 #![deny(clippy::all)]
 #![deny(unsafe_code)]
 use crossbeam_channel::bounded;
+use engine::ray_tracer;
 use num_cpus;
 use pixels::{Pixels, SurfaceTexture};
+use renderer::bucket::*;
+use renderer::settings::*;
 use std::thread;
 use winit::{
     dpi::{LogicalSize, PhysicalSize},
     event::{Event, WindowEvent},
 };
 
-mod ray_tracer;
-
-const WIDTH: u32 = 640;
-const HEIGHT: u32 = 480;
-const BUCKET_SIZE: u32 = 64;
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-struct Bucket {
-    pub x: u32,
-    pub y: u32,
-    pub width: u32,
-    pub height: u32,
-    pub window_width: u32,
-    pub window_height: u32,
-    pub buffer: Vec<u8>,
-}
-
-impl Bucket {
-    fn new(
-        x: u32,
-        y: u32,
-        width: u32,
-        height: u32,
-        window_width: u32,
-        window_height: u32,
-    ) -> Bucket {
-        Bucket {
-            x,
-            y,
-            width,
-            height,
-            window_width,
-            window_height,
-            buffer: vec![0; 4 * (width * height) as usize],
-        }
-    }
-
-    fn set_buffer(&mut self, buffer: Vec<u8>) {
-        self.buffer = buffer;
-    }
-}
+mod engine;
+mod renderer;
 
 fn main() {
     println!("===[[ Starlight Ray Tracer by Nicholas Stienz! ]]===");
@@ -76,27 +40,8 @@ fn main() {
     let mut pixels =
         Pixels::new(window_width, window_height, texture).expect("Failed to create pixels context");
 
-    // Number of times I have said "fuck" because of this: 29
-    let buckets = (0..window_width)
-        .step_by(BUCKET_SIZE as usize)
-        .flat_map(|x| {
-            (0..window_height)
-                .step_by(BUCKET_SIZE as usize)
-                .map(move |y| {
-                    let bucket_width = BUCKET_SIZE.min(window_width - x);
-                    let bucket_height = BUCKET_SIZE.min(window_height - y);
-                    Bucket::new(
-                        x,
-                        y,
-                        bucket_width,
-                        bucket_height,
-                        window_width,
-                        window_height,
-                    )
-                })
-        })
-        .collect::<Vec<_>>();
-
+    // Number of times I have said "fuck" because of this: 31
+    let buckets = create_buckets(window_width, window_height);
     let mut num_buckets = buckets.len();
 
     // Crossbeam fun
