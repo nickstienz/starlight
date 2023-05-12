@@ -34,6 +34,8 @@ fn main() {
         (size.width, size.height)
     };
 
+    window.set_max_inner_size(Some(PhysicalSize::new(window_width, window_height)));
+
     println!("Window Size: {}x{}", window_width, window_height);
 
     let texture = SurfaceTexture::new(window_width, window_height, &window);
