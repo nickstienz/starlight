@@ -1,4 +1,4 @@
-use super::color::*;
+use crate::primitives::color::*;
 
 pub fn ray_trace_pixel(x: u32, y: u32, width: u32, height: u32) -> [u8; 4] {
     let (u, v) = ((x as f64) / width as f64, (y as f64) / height as f64);

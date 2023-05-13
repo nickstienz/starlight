@@ -8,11 +8,12 @@ use renderer::bucket::*;
 use renderer::settings::*;
 use std::thread;
 use winit::{
-    dpi::{LogicalSize, PhysicalSize},
+    dpi::PhysicalSize,
     event::{Event, WindowEvent},
 };
 
 mod engine;
+mod primitives;
 mod renderer;
 
 fn main() {
@@ -24,26 +25,18 @@ fn main() {
         .with_title("Starlight Ray Tracer")
         .build(&event_loop)
         .expect("Failed to create window");
-    let logical_size = LogicalSize::new(WIDTH as f64, HEIGHT as f64);
-    let scale_factor = window.scale_factor();
-    let physical_size: PhysicalSize<u32> = logical_size.to_physical(scale_factor);
+    let physical_size = PhysicalSize::new(WIDTH as f64, HEIGHT as f64);
     window.set_inner_size(physical_size);
 
-    let (window_width, window_height) = {
-        let size = window.inner_size();
-        (size.width, size.height)
-    };
+    window.set_max_inner_size(Some(PhysicalSize::new(WIDTH, HEIGHT)));
 
-    window.set_max_inner_size(Some(PhysicalSize::new(window_width, window_height)));
+    println!("Window Size: {}x{}", WIDTH, HEIGHT);
 
-    println!("Window Size: {}x{}", window_width, window_height);
-
-    let texture = SurfaceTexture::new(window_width, window_height, &window);
-    let mut pixels =
-        Pixels::new(window_width, window_height, texture).expect("Failed to create pixels context");
+    let texture = SurfaceTexture::new(WIDTH, HEIGHT, &window);
+    let mut pixels = Pixels::new(WIDTH, HEIGHT, texture).expect("Failed to create pixels context");
 
     // Number of times I have said "fuck" because of this: 31
-    let buckets = create_buckets(window_width, window_height);
+    let buckets = create_buckets(WIDTH, HEIGHT);
     let mut num_buckets = buckets.len();
 
     // Crossbeam fun
@@ -87,7 +80,7 @@ fn main() {
             for bp_x in 0..bucket.width {
                 for bp_y in 0..bucket.height {
                     let (abs_x, abs_y) = (bucket.x + bp_x, bucket.y + bp_y);
-                    let abs_idx = cti(abs_x, abs_y, window_width);
+                    let abs_idx = cti(abs_x, abs_y, WIDTH);
                     pixels.frame_mut()[abs_idx] = bucket.buffer[cti(bp_x, bp_y, bucket.width)];
                     pixels.frame_mut()[abs_idx + 1] =
                         bucket.buffer[cti(bp_x, bp_y, bucket.width) + 1];
