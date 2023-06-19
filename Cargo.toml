@@ -10,7 +10,7 @@ license = "GPL-3.0-only"
 [dependencies]
 crossbeam-channel = "0.5.7"
 num_cpus = "1.15.0"
-pixels = "0.12.0"
+pixels = "0.13.0"
 rand = "0.8.5"
 rayon = "1.7.0"
 ultraviolet = "0.9.1"
